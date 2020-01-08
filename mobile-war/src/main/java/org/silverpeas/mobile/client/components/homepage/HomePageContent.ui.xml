@@ -28,14 +28,14 @@
 
   <ui:with field='msg' type='org.silverpeas.mobile.client.resources.ApplicationMessages'/>
 
-  <g:HTMLPanel>
+  <g:HTMLPanel ui:field="container">
 
 
-      <div id="actus">
+      <g:FocusPanel ui:field="actus">
           <components:UnorderedList ui:field="news" styleName="carroussel-news"/>
-      </div>
+      </g:FocusPanel>
 
-      <div>
+      <div id="spaces">
         <components:UnorderedList ui:field="spaces" styleName="ui-listview ui-listview-inset ui-corner-all ui-shadow"/>
       </div>
       <g:HTMLPanel stylePrimaryName="favoris-bloc bloc" ui:field="favorisSection">
@@ -56,6 +56,9 @@
       <g:HTMLPanel stylePrimaryName="last-event-bloc bloc" ui:field="lastEventsSection">
         <h3 class="title-bloc-part ui-title"><ui:safehtml from="{msg.lastEvents}"/></h3>
         <components:UnorderedList ui:field="lastEvents" styleName="ui-listview ui-listview-inset ui-corner-all ui-shadow"/>
+      </g:HTMLPanel>
+
+      <g:HTMLPanel stylePrimaryName="free-zone-bloc bloc" ui:field="freeZoneSection">
       </g:HTMLPanel>
 
   </g:HTMLPanel>

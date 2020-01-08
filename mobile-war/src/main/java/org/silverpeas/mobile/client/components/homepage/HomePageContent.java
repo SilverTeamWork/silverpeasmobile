@@ -29,6 +29,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -72,13 +73,22 @@ public class HomePageContent extends Composite implements SwipeEndHandler {
   @UiField
   UnorderedList favoris, lastPublications, spaces, news, lastEvents, shortcuts;
   @UiField
-  HTMLPanel lastPublicationsSection, lastEventsSection, favorisSection, shortCutsSection;
+  HTMLPanel container, lastPublicationsSection, lastEventsSection, favorisSection, shortCutsSection, freeZoneSection;
+  @UiField
+  FocusPanel actus;
 
   interface HomePageUiBinder extends UiBinder<Widget, HomePageContent> {}
 
   public HomePageContent() {
     msg = GWT.create(ApplicationMessages.class);
     initWidget(uiBinder.createAndBindUi(this));
+    container.getElement().setAttribute("id", "homePageContent");
+    actus.getElement().setAttribute("id", "actus");
+    favorisSection.getElement().setAttribute("id", "favoris");
+    lastPublicationsSection.getElement().setAttribute("id", "lastPublications");
+    lastEventsSection.getElement().setAttribute("id", "lastEvents");
+    shortCutsSection.getElement().setAttribute("id", "shortCuts");
+    freeZoneSection.getElement().setAttribute("id", "freeZone");
     Config conf = SpMobil.getConfiguration();
     setConfig(conf);
     EventBus.getInstance().addHandler(SwipeEndEvent.getType(), this);
@@ -89,6 +99,7 @@ public class HomePageContent extends Composite implements SwipeEndHandler {
     favorisSection.setVisible(config.isFavoritesDisplay());
     lastPublicationsSection.setVisible(config.isLastPublicationsDisplay());
     news.setVisible(config.isNewsDisplay());
+    freeZoneSection.setVisible(config.isFreeZoneDisplay());
   }
 
   public void setData(HomePageDTO data) {
@@ -155,9 +166,13 @@ public class HomePageContent extends Composite implements SwipeEndHandler {
       lastEvents.add(item);
     }
 
+    freeZoneSection.clear();
+    HTML html = new HTML(data.getHtmlFreeZone());
+    freeZoneSection.add(html);
+
     if (MobilUtils.isMobil()) {
-      Element e = Document.get().getElementById("actus");
-      HTML actus = HTML.wrap(e);
+      //Element e = Document.get().getElementById("actus");
+      //HTML actus = HTML.wrap(e);
       swipeRecognizer = new SwipeRecognizer(actus);
     }
 

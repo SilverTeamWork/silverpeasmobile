@@ -27,7 +27,6 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.SpanElement;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -38,7 +37,6 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTMLPanel;
-import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
@@ -97,7 +95,7 @@ public class NavigationMenu extends Composite implements PageEventHandler {
     String url = ResourcesManager.getParam("help.url");
     if (url != null && !url.isEmpty()) {
       help.setHref(url);
-      help.setTarget("_blank");
+      help.setTarget("_self");
     }
     tchat.setVisible(Boolean.parseBoolean(ResourcesManager.getParam("chat.enable")));
 
@@ -195,22 +193,7 @@ public class NavigationMenu extends Composite implements PageEventHandler {
   @UiHandler("disconnect")
   protected void disconnect(ClickEvent event) {
     closeMenu();
-    ServicesLocator.getServiceNavigation().logout(new AsyncCallback<Void>() {
-      @Override
-      public void onFailure(final Throwable throwable) {
-        Notification.activityStop();
-      }
-      @Override
-      public void onSuccess(final Void aVoid) {
-        AuthentificationManager.getInstance().clearLocalStorage();
-        PageHistory.getInstance().clear();
-        Notification.activityStop();
-        ConnexionPage connexionPage = new ConnexionPage();
-        RootPanel.get().clear();
-        RootPanel.get().add(connexionPage);
-        SpMobil.destroyMainPage();
-      }
-    });
+    AuthentificationManager.getInstance().logout();
   }
 
   @UiHandler("calendar")

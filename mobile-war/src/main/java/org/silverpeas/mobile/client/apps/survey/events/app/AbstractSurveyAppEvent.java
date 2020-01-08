@@ -21,13 +21,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.silverpeas.mobile.shared.services;
+package org.silverpeas.mobile.client.apps.survey.events.app;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
-import org.silverpeas.mobile.shared.dto.SocialInformationDTO;
+import com.google.gwt.event.shared.GwtEvent;
 
-import java.util.List;
+public abstract class AbstractSurveyAppEvent extends GwtEvent<SurveyAppEventHandler>{
 
-public interface ServiceDashboardAsync {
-	void getAll(int reinitialisationPage, String socialInformationType, AsyncCallback <List<SocialInformationDTO>> callback);
+  public static Type<SurveyAppEventHandler> TYPE = new Type<SurveyAppEventHandler>();
+
+  public AbstractSurveyAppEvent(){
+  }
+
+  @Override
+  public Type<SurveyAppEventHandler> getAssociatedType() {
+    return TYPE;
+  }
 }

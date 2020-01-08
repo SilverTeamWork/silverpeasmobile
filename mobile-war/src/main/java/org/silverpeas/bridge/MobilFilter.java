@@ -36,7 +36,8 @@ import org.silverpeas.core.contribution.publication.service.PublicationService;
 import org.silverpeas.core.security.token.TokenGenerator;
 import org.silverpeas.core.security.token.TokenGeneratorProvider;
 import org.silverpeas.core.security.token.synchronizer.SynchronizerToken;
-import org.silverpeas.core.util.logging.SilverLogger;
+import org.silverpeas.core.util.ResourceLocator;
+import org.silverpeas.core.util.SettingBundle;
 import org.silverpeas.core.web.mvc.controller.MainSessionController;
 
 import javax.servlet.Filter;
@@ -44,16 +45,20 @@ import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
+import javax.servlet.ServletRequestEvent;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MobilFilter implements Filter {
 
   //private static final SilverLogger logger = SilverLogger.getLogger("silverpeas.core.security");
   public static final String SESSION_TOKEN_KEY = "X-STKN";
+  private static String [] urlsAllowed = null;
 
   @Override
   public void destroy() {
@@ -127,6 +132,9 @@ public class MobilFilter implements Filter {
         } else if (url.contains("Contribution")) {
           String contributionId = url.substring(url.lastIndexOf("/") + 1);
           params = "?shortcutContentType=Event&shortcutContributionId=" + contributionId;
+        } else if (url.contains("Component")) {
+          String appId = url.substring(url.lastIndexOf("/") + 1);
+          params = "?shortcutContentType=Component&shortcutAppId=" + appId;
         } else if(!url.contains("AuthenticationServlet") && (url.endsWith("silverpeas") || url.endsWith("silverpeas/") || url.contains("/silverpeas/"))) {
           // simple redirection on mobile login page
           params = "";
@@ -137,7 +145,7 @@ public class MobilFilter implements Filter {
 
         HttpSession session = ((HttpServletRequest) req).getSession(false);
         SynchronizerToken token = (SynchronizerToken) session.getAttribute(SESSION_TOKEN_KEY);
-        MainSessionController controller = (MainSessionController) session.getAttribute("SilverSessionController");
+        MainSessionController controller = (MainSessionController) session.getAttribute(MainSessionController.MAIN_SESSION_CONTROLLER_ATT);
         if (controller != null && token == null) {
           //logger.warn("security.web.protection.token is disable");
           // generate fake token for auto login without token security
@@ -163,6 +171,15 @@ public class MobilFilter implements Filter {
 
   private boolean isRedirect(final String url) {
     String urlRes = url.toLowerCase();
+
+    if (urlsAllowed != null) {
+      for (int i = 0; i < urlsAllowed.length; i++) {
+        if (!urlsAllowed[i].isEmpty() && urlRes.contains(urlsAllowed[i].toLowerCase())) {
+          return false;
+        }
+      }
+    }
+
     if (urlRes.contains("weblib")) return false;
     if (urlRes.toLowerCase().endsWith(".css")) return false;
     if (urlRes.toLowerCase().endsWith(".gif")) return false;
@@ -174,6 +191,10 @@ public class MobilFilter implements Filter {
 
   @Override
   public void init(FilterConfig arg0) throws ServletException {
+
+    SettingBundle config = ResourceLocator.getSettingBundle("org.silverpeas.mobile.mobileSettings");
+    String urls = config.getString("mobile.redirection.disabled.urls");
+    urlsAllowed = urls.split(",");
   }
 
   private PublicationService getPubBm() {
