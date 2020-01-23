@@ -143,6 +143,12 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.silverpeas.core.services</groupId>
+      <artifactId>silverpeas-core-questioncontainer</artifactId>
+      <version>${silverpeas.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.silverpeas.core</groupId>
       <artifactId>silverpeas-core</artifactId>
       <version>${silverpeas.version}</version>
@@ -213,6 +219,13 @@
     </dependency>
 
     <dependency>
+      <groupId>org.silverpeas.components.classifieds</groupId>
+      <artifactId>silverpeas-classifieds</artifactId>
+      <version>${silverpeas.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.silverpeas.core.services</groupId>
       <artifactId>silverpeas-core-workflow</artifactId>
       <version>${silverpeas.version}</version>
@@ -267,7 +280,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.9.9.2</version>
+      <version>2.9.10.1</version>
       <scope>provided</scope>
     </dependency>
 

@@ -169,16 +169,12 @@ public class FormsOnlineApp extends App implements FormsOnlineAppEventHandler, N
   }
 
   private static native void saveForm(FormsOnlineApp app, JavaScriptObject fd, String token, String stkn, String instanceId, String formId) /*-{
-    var url = "/silverpeas/services/formsOnline/saveForm";
+    var url = "/silverpeas/services/formsOnline/"+instanceId+"/saveForm/" + formId;
     var xhr = new XMLHttpRequest();
     xhr.open("POST", url, false);
     xhr.setRequestHeader("X-Silverpeas-Session", token);
     xhr.setRequestHeader("Authorization", "Bearer " + token);
     xhr.setRequestHeader("X-STKN", stkn);
-
-    fd.append("instanceId", instanceId);
-    fd.append("formId", formId);
-
 
     xhr.onreadystatechange = function() {
       if (xhr.readyState == 4 && xhr.status == 200) {
@@ -237,7 +233,9 @@ public class FormsOnlineApp extends App implements FormsOnlineAppEventHandler, N
 
   @Override
   public void showContent(final NavigationShowContentEvent event) {
-
+    if (event.getContent().getType().equals("Component") && event.getContent().getInstanceId().startsWith(Apps.formsOnline.name())) {
+      super.showContent(event);
+    }
   }
 
 }

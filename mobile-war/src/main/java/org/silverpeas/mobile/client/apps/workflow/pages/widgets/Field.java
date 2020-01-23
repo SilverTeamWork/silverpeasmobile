@@ -29,11 +29,11 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import org.silverpeas.mobile.client.SpMobil;
-import org.silverpeas.mobile.client.common.navigation.UrlUtils;
+import org.silverpeas.mobile.client.components.attachments.AttachmentsManager;
 import org.silverpeas.mobile.client.resources.ApplicationMessages;
 import org.silverpeas.mobile.shared.dto.workflow.FieldPresentationDTO;
 
@@ -43,7 +43,7 @@ public class Field extends Composite {
   private FieldPresentationDTO data;
 
   @UiField
-  Label label;
+  HTML label;
   @UiField
   Anchor link;
   @UiField
@@ -61,22 +61,20 @@ public class Field extends Composite {
   public void setData(FieldPresentationDTO data) {
     this.data = data;
     String value = "";
-    if (data.getValue() != null) value = data.getValue();
+    if (data.getValue() != null) {
+      value = data.getValue();
+    }
 
     if (data.getType().equalsIgnoreCase("file")) {
       label.setText(data.getLabel() + " : ");
       link.setVisible(true);
       link.setText(value);
       label.getElement().getStyle().setDisplay(Style.Display.INLINE);
-      String url = UrlUtils.getServicesLocation();
-      url += "Attachment";
-      url = url + "?id=" + data.getId() + "&lang=" + SpMobil.getUser().getLanguage();
-      link.setHref(url);
-      link.setTarget("_self");
-      link.getElement().setAttribute("download", data.getValue());
-      //link.fireEvent(new ClickEvent() {});
+      AttachmentsManager
+          .generateLink(data.getId(), data.getInstanceId(), SpMobil.getUser().getLanguage(),
+              data.getValue(), link);
     } else {
-      label.setText(data.getLabel() + " : " + value);
+      label.setHTML(data.getLabel() + " : " + value);
     }
   }
 }

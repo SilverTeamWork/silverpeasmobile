@@ -32,10 +32,10 @@ import org.silverpeas.components.gallery.service.MediaServiceProvider;
 import org.silverpeas.components.quickinfo.model.News;
 import org.silverpeas.components.quickinfo.model.QuickInfoService;
 import org.silverpeas.components.quickinfo.model.QuickInfoServiceProvider;
+import org.silverpeas.core.admin.service.AdminException;
 import org.silverpeas.core.admin.service.Administration;
 import org.silverpeas.core.admin.service.OrganizationController;
 import org.silverpeas.core.contribution.publication.model.PublicationDetail;
-import org.silverpeas.core.contribution.publication.model.PublicationPK;
 import org.silverpeas.core.contribution.publication.service.PublicationService;
 import org.silverpeas.core.io.file.ImageResizingProcessor;
 import org.silverpeas.core.io.file.SilverpeasFileProcessor;
@@ -92,7 +92,7 @@ public class NewsHelper {
       List<PublicationDetail> news = new ArrayList<PublicationDetail>();
       for (String appId : appIds) {
         Collection<PublicationDetail> someNews =
-            PublicationService.get().getOrphanPublications(new PublicationPK("", appId));
+            PublicationService.get().getOrphanPublications(appId);
         for (PublicationDetail aNews : someNews) {
           if (isVisibleNews(aNews)) {
             news.add(aNews);
@@ -121,7 +121,7 @@ public class NewsHelper {
   }
 
   private boolean isVisibleNews(PublicationDetail news) {
-    return news.isValid() && news.getVisibilityPeriod().contains(new Date());
+    return news.isValid() && news.isVisible();
   }
 
   private List<PublicationDetail> getDelegatedNews(String userId) throws Exception {
@@ -152,11 +152,12 @@ public class NewsHelper {
     return news;
   }
 
-  private List<PublicationDetail> getNewsByComponentId(String appId, boolean managerAccess, String userId) {
+  private List<PublicationDetail> getNewsByComponentId(String appId, boolean managerAccess, String userId) throws AdminException {
     QuickInfoService service = QuickInfoServiceProvider.getQuickInfoService();
     List<PublicationDetail> allNews = new ArrayList<PublicationDetail>();
     List<News> news;
-    if (organizationController.isComponentAvailable(appId, userId)) {
+
+    if (Administration.get().isComponentAvailableToUser(appId, userId)) {
       if (managerAccess) {
         news = service.getAllNews(appId);
       } else {
@@ -265,7 +266,7 @@ public class NewsHelper {
         Photo photo = MediaServiceProvider.getMediaService().getPhoto(new MediaPK(imageId));
         String[] rep = {"image" + imageId};
 
-        String path = FileRepositoryManager.getAbsolutePath(null, instanceId, rep);
+        String path = FileRepositoryManager.getAbsolutePath(instanceId, rep);
         File f = new File(path + photo.getFileName());
 
         File fResized = resizeImage(f);

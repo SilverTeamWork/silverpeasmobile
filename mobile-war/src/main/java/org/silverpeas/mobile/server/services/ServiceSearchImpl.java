@@ -29,6 +29,7 @@ import org.silverpeas.core.index.search.SearchEngineProvider;
 import org.silverpeas.core.index.search.model.MatchingIndexEntry;
 import org.silverpeas.core.index.search.model.QueryDescription;
 import org.silverpeas.mobile.shared.dto.ContentsTypes;
+import org.silverpeas.mobile.shared.dto.navigation.Apps;
 import org.silverpeas.mobile.shared.dto.search.ResultDTO;
 import org.silverpeas.mobile.shared.exceptions.AuthenticationException;
 import org.silverpeas.mobile.shared.exceptions.SearchException;
@@ -44,18 +45,31 @@ public class ServiceSearchImpl extends AbstractAuthenticateService implements Se
   private final String ALL_COMPONENTS = "*";
 
   @Override
-  public List<ResultDTO> search(final String query) throws SearchException, AuthenticationException {
+  public List<ResultDTO> search(final String query)
+      throws SearchException, AuthenticationException {
     List<ResultDTO> results = new ArrayList<ResultDTO>();
     try {
       QueryDescription q = new QueryDescription(query);
       q.setSearchingUser(getUserInSession().getId());
       q.setRequestedLanguage(getUserInSession().getUserPreferences().getLanguage());
+      q.setAdminScope(getUserInSession().isAccessAdmin());
+      q.addComponent("Spaces");
+      q.addComponent("Components");
       buildSpaceComponentAvailableForUser(q, ALL_SPACES, ALL_COMPONENTS);
       PlainSearchResult r = SearchEngineProvider.getSearchEngine().search(q);
       for (MatchingIndexEntry result : r.getEntries()) {
 
-        if (result.getObjectType().equals(ContentsTypes.Photo.toString()) || result.getObjectType().equals(ContentsTypes.Sound.toString()) || result.getObjectType().equals(ContentsTypes.Video.toString()) || result.getObjectType().equals(ContentsTypes.Streaming.toString()) || result.getObjectType().equals(ContentsTypes.Publication.toString()) || result.getObjectType().contains(
-            ContentsTypes.Attachment.toString())) {
+        if (result.getObjectType().equals(ContentsTypes.Photo.toString()) ||
+            result.getObjectType().equals(ContentsTypes.Sound.toString()) ||
+            result.getObjectType().equals(ContentsTypes.Video.toString()) ||
+            result.getObjectType().equals(ContentsTypes.Streaming.toString()) ||
+            result.getObjectType().equals(ContentsTypes.Publication.toString()) ||
+            result.getObjectType().contains(ContentsTypes.Attachment.toString()) ||
+            result.getObjectType().equals(ContentsTypes.Classified.toString()) ||
+            result.getObjectType().equals(ContentsTypes.Node.toString()) ||
+            result.getObjectType().equals(ContentsTypes.QuestionContainer.toString()) ||
+            result.getObjectType().equals(ContentsTypes.Component.toString()) ||
+            result.getObjectType().equals(ContentsTypes.Space.toString())) {
           String title = result.getTitle(getUserInSession().getUserPreferences().getLanguage());
           if (title != null && title.contains("wysiwyg") == false) {
             ResultDTO entry = new ResultDTO();
@@ -66,12 +80,22 @@ public class ServiceSearchImpl extends AbstractAuthenticateService implements Se
               attachmentId = attachmentId
                   .replace("_" + getUserInSession().getUserPreferences().getLanguage(), "");
               entry.setAttachmentId(attachmentId);
+            } else if(result.getObjectType().equals(ContentsTypes.Node.toString())) {
+              if (result.getComponent().startsWith(Apps.kmelia.toString())) {
+                entry.setType(ContentsTypes.Folder.name());
+              } else if(result.getComponent().startsWith(Apps.gallery.toString())) {
+                entry.setType(ContentsTypes.Album.name());
+              }
             } else {
               entry.setType(result.getObjectType());
             }
             entry.setId(result.getObjectId());
             entry.setTitle(title);
-            entry.setComponentId(result.getComponent());
+            if (result.getObjectType().equals(ContentsTypes.Component.name())) {
+              entry.setComponentId(result.getObjectId());
+            } else {
+              entry.setComponentId(result.getComponent());
+            }
             results.add(entry);
           }
         }
@@ -84,7 +108,8 @@ public class ServiceSearchImpl extends AbstractAuthenticateService implements Se
     return results;
   }
 
-  private void buildSpaceComponentAvailableForUser(QueryDescription queryDescription, String spaceId, String componentId) throws Exception {
+  private void buildSpaceComponentAvailableForUser(QueryDescription queryDescription,
+      String spaceId, String componentId) throws Exception {
 
     if (spaceId == null || spaceId.length() == 0) {
       spaceId = ALL_SPACES;
@@ -95,23 +120,26 @@ public class ServiceSearchImpl extends AbstractAuthenticateService implements Se
 
     if (spaceId.equals(ALL_SPACES)) {
       //No restriction on spaces.
-      String [] allowedSpaceIds = getAdministration().getAllSpaceIds(getUserInSession().getId());
+      String[] allowedSpaceIds = getAdministration().getAllSpaceIds(getUserInSession().getId());
 
       for (String allowedSpaceId : allowedSpaceIds) {
-        buildSpaceComponentAvailableForUser(queryDescription, (String) allowedSpaceId, ALL_COMPONENTS);
+        buildSpaceComponentAvailableForUser(queryDescription, (String) allowedSpaceId,
+            ALL_COMPONENTS);
       }
     } else {
       //The search is restricted to one given space
       if (componentId.equals(ALL_COMPONENTS)) {
         //No restriction on components of the selected space
         //First, we get all available components on this space
-        String [] allowedComponentIds = getAdministration().getAvailCompoIds(spaceId, getUserInSession().getId());
+        String[] allowedComponentIds =
+            getAdministration().getAvailCompoIds(spaceId, getUserInSession().getId());
         for (String allowedComponentId : allowedComponentIds) {
           buildSpaceComponentAvailableForUser(queryDescription, spaceId, allowedComponentId);
         }
 
         //Second, we recurse on each sub space of this space
-        String [] subSpaceIds = getAdministration().getAllowedSubSpaceIds(getUserInSession().getId(), spaceId);
+        String[] subSpaceIds =
+            getAdministration().getAllowedSubSpaceIds(getUserInSession().getId(), spaceId);
         if (subSpaceIds != null) {
           for (String subSpaceId : subSpaceIds) {
             buildSpaceComponentAvailableForUser(queryDescription, subSpaceId, ALL_COMPONENTS);

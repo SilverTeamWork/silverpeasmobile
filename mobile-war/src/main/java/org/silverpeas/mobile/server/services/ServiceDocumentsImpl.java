@@ -25,7 +25,7 @@ package org.silverpeas.mobile.server.services;
 
 import org.silverpeas.components.kmelia.service.KmeliaService;
 import org.silverpeas.core.ResourceReference;
-import org.silverpeas.core.admin.ObjectType;
+import org.silverpeas.core.admin.ProfiledObjectId;
 import org.silverpeas.core.admin.component.model.ComponentInstLight;
 import org.silverpeas.core.admin.service.Administration;
 import org.silverpeas.core.admin.service.OrganizationController;
@@ -107,8 +107,7 @@ public class ServiceDocumentsImpl extends AbstractAuthenticateService implements
             if (isCurrentTopicAvailable(nodeDetail)) {
               topic.setId(String.valueOf(nodeDetail.getId()));
               topic.setName(nodeDetail.getName());
-              int childrenNumber = getNodeBm()
-                  .getChildrenNumber(new NodePK(String.valueOf(nodeDetail.getId()), instanceId));
+              int childrenNumber = nodeDetail.getChildrenNumber();
 
               // count publications
               Collection<NodePK> pks = getAllSubNodePKs(nodeDetail.getNodePK());
@@ -128,16 +127,16 @@ public class ServiceDocumentsImpl extends AbstractAuthenticateService implements
                 }
               }
               PublicationPK pubPK = new PublicationPK("useless", instanceId);
-              List<PublicationDetail> publications = (List<PublicationDetail>) getPubBm().getDetailsByFatherIds(ids, pubPK, "pubname");
+              List<PublicationDetail> publications = (List<PublicationDetail>) getPubBm().getDetailsByFatherIds(ids, pubPK.getInstanceId(), false);
               int nbPubNotVisible = 0;
               for (PublicationDetail publication : publications) {
                 if (coWriting) {
                   if (isRightsOnTopicsEnabled(instanceId)) {
-                    NodePK f = getKmeliaBm().getPublicationFatherPK(publication.getPK(), true,
-                        getUserInSession().getId(), isRightsOnTopicsEnabled(instanceId));
+                    NodePK f = getKmeliaBm().getPublicationFatherPK(publication.getPK(), getUserInSession().getId());
+                    NodeDetail node = NodeService.get().getHeader(f, false);
+                    ProfiledObjectId profiledObjectId = ProfiledObjectId.fromNode(node.getRightsDependsOn());
                     String[] profiles = organizationController
-                        .getUserProfiles(getUserInSession().getId(), instanceId, Integer.valueOf
-                            (f.getId()), ObjectType.NODE);
+                        .getUserProfiles(getUserInSession().getId(), instanceId, profiledObjectId);
                     if (isSingleReader(profiles) && publication.isDraft()) {
                       nbPubNotVisible++;
                     }
@@ -230,12 +229,13 @@ public class ServiceDocumentsImpl extends AbstractAuthenticateService implements
       ArrayList<String> nodeIds = new ArrayList<String>();
       nodeIds.add(nodePK.getId());
 
-      List<PublicationDetail> publications = (List<PublicationDetail>) getPubBm().getDetailsByFatherIds(nodeIds, pubPK, "pubname");
-
+      List<PublicationDetail> publications = (List<PublicationDetail>) getPubBm().getDetailsByFatherIds(nodeIds, pubPK.getInstanceId(), false);
       String[] profiles;
 
       if (isRightsOnTopicsEnabled(instanceId)) {
-        profiles = organizationController.getUserProfiles(getUserInSession().getId(), instanceId, Integer.valueOf(topicId), ObjectType.NODE);
+        NodeDetail node = NodeService.get().getHeader(nodePK, false);
+        ProfiledObjectId nodeRef = ProfiledObjectId.fromNode(node.getRightsDependsOn());
+        profiles = organizationController.getUserProfiles(getUserInSession().getId(), instanceId, nodeRef);
       } else {
         profiles = organizationController.getUserProfiles(getUserInSession().getId(), instanceId);
       }
@@ -273,8 +273,7 @@ public class ServiceDocumentsImpl extends AbstractAuthenticateService implements
   private boolean isCurrentTopicAvailable(NodeDetail node) throws Exception {
     if (isRightsOnTopicsEnabled(node.getNodePK().getInstanceId())) {
       if (node.haveRights()) {
-        int rightsDependsOn = node.getRightsDependsOn();
-        return organizationController.isObjectAvailable(rightsDependsOn, ObjectType.NODE, node.getNodePK().getInstanceId(), getUserInSession().getId());
+        return node.canBeAccessedBy(getUserInSession());
       }
     }
     return true;

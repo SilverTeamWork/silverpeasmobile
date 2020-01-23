@@ -40,6 +40,7 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 import org.silverpeas.mobile.client.apps.agenda.AgendaApp;
 import org.silverpeas.mobile.client.apps.blog.BlogApp;
+import org.silverpeas.mobile.client.apps.classifieds.ClassifiedsApp;
 import org.silverpeas.mobile.client.apps.contacts.ContactsApp;
 import org.silverpeas.mobile.client.apps.documents.DocumentsApp;
 import org.silverpeas.mobile.client.apps.favorites.FavoritesApp;
@@ -49,6 +50,8 @@ import org.silverpeas.mobile.client.apps.media.MediaApp;
 import org.silverpeas.mobile.client.apps.navigation.NavigationApp;
 import org.silverpeas.mobile.client.apps.navigation.events.pages.HomePageLoadedEvent;
 import org.silverpeas.mobile.client.apps.news.NewsApp;
+import org.silverpeas.mobile.client.apps.notificationsbox.NotificationsBoxApp;
+import org.silverpeas.mobile.client.apps.survey.SurveyApp;
 import org.silverpeas.mobile.client.apps.tasks.TasksApp;
 import org.silverpeas.mobile.client.apps.webpage.WebPageApp;
 import org.silverpeas.mobile.client.apps.workflow.WorkflowApp;
@@ -59,6 +62,7 @@ import org.silverpeas.mobile.client.common.Notification;
 import org.silverpeas.mobile.client.common.ServicesLocator;
 import org.silverpeas.mobile.client.common.ShortCutRouter;
 import org.silverpeas.mobile.client.common.app.App;
+import org.silverpeas.mobile.client.common.event.ErrorEvent;
 import org.silverpeas.mobile.client.common.event.ExceptionEvent;
 import org.silverpeas.mobile.client.common.event.authentication.AbstractAuthenticationErrorEvent;
 import org.silverpeas.mobile.client.common.event.authentication.AuthenticationEventHandler;
@@ -73,6 +77,7 @@ import org.silverpeas.mobile.client.components.base.events.window.OrientationCha
 import org.silverpeas.mobile.client.pages.connexion.ConnexionPage;
 import org.silverpeas.mobile.client.pages.main.HomePage;
 import org.silverpeas.mobile.client.pages.search.SearchResultPage;
+import org.silverpeas.mobile.client.pages.termsofservice.TermsOfServicePage;
 import org.silverpeas.mobile.client.resources.ApplicationMessages;
 import org.silverpeas.mobile.shared.dto.DetailUserDTO;
 import org.silverpeas.mobile.shared.dto.FullUserDTO;
@@ -117,6 +122,7 @@ public class SpMobil implements EntryPoint, AuthenticationEventHandler {
   public static void setUser(final DetailUserDTO user) {
     SpMobil.user = user;
   }
+
 
   /**
    * Init. spmobile.
@@ -190,6 +196,9 @@ public class SpMobil implements EntryPoint, AuthenticationEventHandler {
     apps.add(new AgendaApp());
     apps.add(new FormsOnlineApp());
     apps.add(new ContactsApp());
+    apps.add(new ClassifiedsApp());
+    apps.add(new SurveyApp());
+    apps.add(new NotificationsBoxApp());
   }
 
   public static Page getMainPage() {
@@ -235,7 +244,8 @@ public class SpMobil implements EntryPoint, AuthenticationEventHandler {
     RootPanel.get().add(getMainPage());
     PageHistory.getInstance().goTo(new HomePage());
 
-    if ((shortcutAppId != null && shortcutContentType != null && shortcutContentId != null) || shortcutContributionId != null) {
+    if ( (shortcutAppId != null && shortcutContentType != null && shortcutContentId != null) || shortcutContributionId != null
+        || (shortcutContentType != null && shortcutContentType.equals("Component") && shortcutAppId != null) ) {
       ShortCutRouter.route(user, shortcutAppId, shortcutContentType, shortcutContentId, shortcutContributionId);
     } else {
       final String key = "MainHomePage_";
@@ -257,6 +267,12 @@ public class SpMobil implements EntryPoint, AuthenticationEventHandler {
           };
       action.attempt();
     }
+  }
+
+  public static void displayTermsOfServicePage() {
+    RootPanel.get().clear();
+    RootPanel.get().add(getMainPage());
+    SpMobil.getMainPage().setContent(new TermsOfServicePage());
   }
 
   private static Command getOfflineAction(final String key) {
@@ -298,8 +314,26 @@ public class SpMobil implements EntryPoint, AuthenticationEventHandler {
 
         @Override
         public void onSuccess(final DetailUserDTO detailUserDTO) {
-          user = detailUserDTO;
-          SpMobil.displayMainPage();
+          setUser(detailUserDTO);
+          setUserProfile(LocalStorageHelper.load(AuthentificationManager.USER_PROFIL, UserProfileDTO.class));
+
+          ServicesLocator.getServiceConnection().showTermsOfService(new AsyncCallback<Boolean>() {
+            @Override
+            public void onFailure(final Throwable t) {
+              Notification.activityStop();
+              EventBus.getInstance().fireEvent(new ErrorEvent(t));
+            }
+
+            @Override
+            public void onSuccess(final Boolean showTerms) {
+
+              if (showTerms) {
+                SpMobil.displayTermsOfServicePage();
+              } else {
+                SpMobil.displayMainPage();
+              }
+            }
+          });
         }
       });
     } else {
@@ -309,7 +343,7 @@ public class SpMobil implements EntryPoint, AuthenticationEventHandler {
     }
   }
 
-  private static void tabletGesture(boolean connected) {
+  public static void tabletGesture(boolean connected) {
     if (MobilUtils.isTablet()) {
       if (connected) {
         ServicesLocator.getServiceNavigation().setTabletMode(new AsyncCallback<Boolean>() {
@@ -349,7 +383,7 @@ public class SpMobil implements EntryPoint, AuthenticationEventHandler {
     }
   }
 
-  private static void displayLoginPage(boolean authenticateError) {
+  public static void displayLoginPage(boolean authenticateError) {
     ConnexionPage connexionPage = new ConnexionPage();
     connexionPage.setAuthenticateError(authenticateError);
     RootPanel.get().clear();

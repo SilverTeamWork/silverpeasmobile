@@ -27,7 +27,6 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.SpanElement;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -38,7 +37,6 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTMLPanel;
-import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
@@ -47,6 +45,7 @@ import org.silverpeas.mobile.client.SpMobil;
 import org.silverpeas.mobile.client.apps.config.ConfigApp;
 import org.silverpeas.mobile.client.apps.navigation.events.app.external
     .NavigationAppInstanceChangedEvent;
+import org.silverpeas.mobile.client.apps.navigation.events.app.external.NavigationShowContentEvent;
 import org.silverpeas.mobile.client.apps.status.StatusApp;
 import org.silverpeas.mobile.client.apps.status.events.StatusEvents;
 import org.silverpeas.mobile.client.common.AuthentificationManager;
@@ -66,6 +65,8 @@ import org.silverpeas.mobile.client.components.base.widgets.AvatarUpload;
 import org.silverpeas.mobile.client.pages.connexion.ConnexionPage;
 import org.silverpeas.mobile.client.resources.ApplicationMessages;
 import org.silverpeas.mobile.client.resources.ApplicationResources;
+import org.silverpeas.mobile.shared.dto.ContentDTO;
+import org.silverpeas.mobile.shared.dto.ContentsTypes;
 import org.silverpeas.mobile.shared.dto.DetailUserDTO;
 import org.silverpeas.mobile.shared.dto.StatusDTO;
 import org.silverpeas.mobile.shared.dto.navigation.ApplicationInstanceDTO;
@@ -76,7 +77,7 @@ public class NavigationMenu extends Composite implements PageEventHandler {
   private static NavigationMenuUiBinder uiBinder = GWT.create(NavigationMenuUiBinder.class);
 
   @UiField HTMLPanel container, user;
-  @UiField Anchor home, disconnect, updateStatus, searchButton, help, config, tchat, calendar;
+  @UiField Anchor home, disconnect, updateStatus, searchButton, help, config, tchat, calendar, notifications;
   @UiField SpanElement status;
   @UiField TextBox search;
   @UiField AvatarUpload avatar;
@@ -97,10 +98,9 @@ public class NavigationMenu extends Composite implements PageEventHandler {
     String url = ResourcesManager.getParam("help.url");
     if (url != null && !url.isEmpty()) {
       help.setHref(url);
-      help.setTarget("_blank");
+      help.setTarget("_self");
     }
     tchat.setVisible(Boolean.parseBoolean(ResourcesManager.getParam("chat.enable")));
-
     EventBus.getInstance().addHandler(AbstractPageEvent.TYPE, this);
   }
 
@@ -173,6 +173,14 @@ public class NavigationMenu extends Composite implements PageEventHandler {
     }
   }
 
+  @UiHandler("notifications")
+  protected void goNotificationsBox(ClickEvent event) {
+    ContentDTO content = new ContentDTO();
+    content.setType(ContentsTypes.NotificationsBox.toString());
+    EventBus.getInstance().fireEvent(new NavigationShowContentEvent(content));
+    closeMenu();
+  }
+
   @UiHandler("help")
   protected void goHelp(ClickEvent event) {
     closeMenu();
@@ -195,22 +203,7 @@ public class NavigationMenu extends Composite implements PageEventHandler {
   @UiHandler("disconnect")
   protected void disconnect(ClickEvent event) {
     closeMenu();
-    ServicesLocator.getServiceNavigation().logout(new AsyncCallback<Void>() {
-      @Override
-      public void onFailure(final Throwable throwable) {
-        Notification.activityStop();
-      }
-      @Override
-      public void onSuccess(final Void aVoid) {
-        AuthentificationManager.getInstance().clearLocalStorage();
-        PageHistory.getInstance().clear();
-        Notification.activityStop();
-        ConnexionPage connexionPage = new ConnexionPage();
-        RootPanel.get().clear();
-        RootPanel.get().add(connexionPage);
-        SpMobil.destroyMainPage();
-      }
-    });
+    AuthentificationManager.getInstance().logout();
   }
 
   @UiHandler("calendar")
@@ -229,6 +222,6 @@ public class NavigationMenu extends Composite implements PageEventHandler {
     user.addAndReplaceElement(html, "userName");
     status.setInnerHTML(currentUser.getStatus());
 
-
+    notifications.setVisible(currentUser.isNotificationBox());
   }
 }

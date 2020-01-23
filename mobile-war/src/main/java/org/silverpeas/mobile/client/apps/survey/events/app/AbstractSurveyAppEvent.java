@@ -21,32 +21,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.silverpeas.mobile.server.services;
+package org.silverpeas.mobile.client.apps.survey.events.app;
 
-import org.silverpeas.core.date.Date;
-import org.silverpeas.core.socialnetwork.model.SocialInformation;
-import org.silverpeas.core.socialnetwork.model.SocialInformationType;
-import org.silverpeas.core.socialnetwork.provider.ProviderSwitchInterface;
-import org.silverpeas.core.util.ServiceProvider;
-import org.silverpeas.core.util.logging.SilverLogger;
+import com.google.gwt.event.shared.GwtEvent;
 
-import java.util.ArrayList;
-import java.util.List;
+public abstract class AbstractSurveyAppEvent extends GwtEvent<SurveyAppEventHandler>{
 
-public class ProviderService {
-  private ProviderSwitchInterface switchInterface;
+  public static Type<SurveyAppEventHandler> TYPE = new Type<SurveyAppEventHandler>();
 
-  public ProviderService() {
-    switchInterface = ServiceProvider.getService(ProviderSwitchInterface.class);
+  public AbstractSurveyAppEvent(){
   }
 
-  public List<SocialInformation> getSocialInformationsListOfMyContact(SocialInformationType socialInformationType, String myId,
-      List<String> myContactIds, Date begin, Date end) {
-    try {
-      return switchInterface.getSocialInformationsListOfMyContacts(socialInformationType, myId, myContactIds, begin, end);
-    } catch (Exception ex) {
-        SilverLogger.getLogger("socialNetwork").error("ProviderService.getSocialInformationsListOfMyContact",ex);
-    }
-    return new ArrayList<>();
+  @Override
+  public Type<SurveyAppEventHandler> getAssociatedType() {
+    return TYPE;
   }
 }

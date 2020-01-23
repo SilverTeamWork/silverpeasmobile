@@ -27,6 +27,7 @@ import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import org.silverpeas.mobile.shared.dto.BaseDTO;
 import org.silverpeas.mobile.shared.dto.notifications.NotificationDTO;
+import org.silverpeas.mobile.shared.dto.notifications.NotificationReceivedDTO;
 import org.silverpeas.mobile.shared.exceptions.AuthenticationException;
 import org.silverpeas.mobile.shared.exceptions.NotificationsException;
 
@@ -35,5 +36,13 @@ import java.util.List;
 @RemoteServiceRelativePath("Notifications")
 public interface ServiceNotifications extends RemoteService {
   List<BaseDTO> getAllowedUsersAndGroups(String componentId, String contentId) throws NotificationsException, AuthenticationException;
+
+  void markAsReaden(long id) throws NotificationsException, AuthenticationException;
+
+  void markAsRead(List<NotificationReceivedDTO> selection) throws NotificationsException, AuthenticationException;
+
+  void delete(List<NotificationReceivedDTO> selection) throws NotificationsException, AuthenticationException;
+
   void send(NotificationDTO notification, List<BaseDTO> receivers, String subject) throws NotificationsException, AuthenticationException;
+  List<NotificationReceivedDTO> getUserNotifications() throws NotificationsException, AuthenticationException;
 }

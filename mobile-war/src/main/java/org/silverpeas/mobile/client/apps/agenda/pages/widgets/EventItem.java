@@ -31,13 +31,13 @@ import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.Widget;
 import org.silverpeas.mobile.client.apps.agenda.pages.EventPage;
 import org.silverpeas.mobile.client.apps.agenda.resources.AgendaMessages;
+import org.silverpeas.mobile.client.common.DateUtil;
 import org.silverpeas.mobile.shared.dto.almanach.CalendarDTO;
 import org.silverpeas.mobile.shared.dto.almanach.CalendarEventDTO;
 import org.silverpeas.mobile.shared.dto.navigation.ApplicationInstanceDTO;
@@ -86,15 +86,34 @@ public class EventItem extends Composite {
     Date startDate = dtf.parse(event.getStartDate());
     Date endDate = dtf.parse(event.getEndDate());
 
+    if (event.isOnAllDay()) endDate.setTime(endDate.getTime()-1000);
+
     DateTimeFormat dayformat = DateTimeFormat.getFormat("EEEE");
     DateTimeFormat mouthformat = DateTimeFormat.getFormat("MMMM");
     DateTimeFormat df = DateTimeFormat.getFormat("dd");
 
-    String start = getDay(dayformat.format(startDate)) + " " + df.format(startDate) + " " + getMouth(mouthformat.format(startDate));
-    String end = getDay(dayformat.format(endDate)) + " " + df.format(endDate) + " " + getMouth(mouthformat.format(endDate));
 
-    String date = "<span>" + msg.from() + " <strong>"+start+"</strong></span> <span>" + msg.toDay() + " "+end+"</span>";
+    String startDateFormated = dayformat.format(startDate);
+    String endDateFormated = dayformat.format(endDate);
+    String date = "";
+    if (startDateFormated.equals(endDateFormated) || (event.isOnAllDay() && isOnOneDay())) {
+      String start = getDay(startDateFormated) + " " + df.format(startDate) + " " + getMouth(mouthformat.format(startDate));
+      date = "<span>" + msg.the() + " <strong>" + start + "</strong></span>";
+    } else {
+      String start = getDay(startDateFormated) + " " + df.format(startDate) + " " + getMouth(mouthformat.format(startDate));
+      String end = getDay(endDateFormated) + " " + df.format(endDate) + " " + getMouth(mouthformat.format(endDate));
+      date = "<span>" + msg.from() + " <strong>" + start + "</strong></span> <span>" + msg.toDay() + " " + end + "</span>";
+    }
+
     eventDate.setInnerHTML(date);
+  }
+
+  private boolean isOnOneDay() {
+      DateTimeFormat df = DateTimeFormat.getFormat("yyyy-MM-dd");
+      Date start = df.parse(event.getStartDate());
+      Date end = df.parse(event.getEndDate());
+      end = DateUtil.addDays(end, -1);
+      return (DateUtil.isSameDate(start, end));
   }
 
   public String getDay(String value) {

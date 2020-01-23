@@ -21,13 +21,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.silverpeas.mobile.shared.services;
+package org.silverpeas.mobile.client.apps.survey.events.pages;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
-import org.silverpeas.mobile.shared.dto.SocialInformationDTO;
+import org.silverpeas.mobile.shared.dto.survey.SurveyDTO;
+import org.silverpeas.mobile.shared.dto.survey.SurveyDetailDTO;
 
 import java.util.List;
 
-public interface ServiceDashboardAsync {
-	void getAll(int reinitialisationPage, String socialInformationType, AsyncCallback <List<SocialInformationDTO>> callback);
+public class UpdateParticipationNumberEvent extends AbstractSurveyPagesEvent {
+
+  private SurveyDetailDTO survey = null;
+
+  public UpdateParticipationNumberEvent(SurveyDetailDTO survey) {
+    super();
+    this.survey = survey;
+  }
+
+  @Override
+  protected void dispatch(SurveyPagesEventHandler handler) {
+    handler.onUpdateParticipationNumber(this);
+  }
+
+  public SurveyDetailDTO getSurvey() {
+    return survey;
+  }
 }

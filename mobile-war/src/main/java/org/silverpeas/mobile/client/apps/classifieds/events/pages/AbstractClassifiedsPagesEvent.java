@@ -21,18 +21,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.silverpeas.mobile.shared.services;
+package org.silverpeas.mobile.client.apps.classifieds.events.pages;
 
-import com.google.gwt.user.client.rpc.RemoteService;
-import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
-import org.silverpeas.mobile.shared.dto.SocialInformationDTO;
-import org.silverpeas.mobile.shared.exceptions.AuthenticationException;
-import org.silverpeas.mobile.shared.exceptions.DashboardException;
+import com.google.gwt.event.shared.GwtEvent;
 
-import java.util.List;
+public abstract class AbstractClassifiedsPagesEvent extends GwtEvent<ClassifiedsPagesEventHandler>{
 
-@RemoteServiceRelativePath("Dashboard")
-public interface ServiceDashboard extends RemoteService {
-	public List<SocialInformationDTO> getAll(int reinitialisationPage, String socialInformationType) throws
-                                                                                                   DashboardException, AuthenticationException;
+	public static Type<ClassifiedsPagesEventHandler> TYPE = new Type<ClassifiedsPagesEventHandler>();
+
+	public AbstractClassifiedsPagesEvent(){
+	}
+
+	@Override
+	public Type<ClassifiedsPagesEventHandler> getAssociatedType() {
+		return TYPE;
+	}
 }
